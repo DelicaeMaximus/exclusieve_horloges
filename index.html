@@ -62,23 +62,10 @@
 
     /* ---- LOGIN ---- */
     #login-bg {
-      position: absolute; inset: 0;
-      background-image: url('https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?auto=format&fit=crop&q=80&w=2000');
-      background-size: cover; background-position: center;
-      opacity: 0.12;
-      filter: grayscale(60%) contrast(110%);
-      transform: scale(1.05);
-      animation: slowPan 30s linear infinite alternate;
-      z-index: 0;
-    }
-    @keyframes slowPan {
-      from { transform: scale(1.05) translateY(0); }
-      to   { transform: scale(1.1)  translateY(-2%); }
+      display: none;
     }
     .login-overlay {
-      position: absolute; inset: 0;
-      background: radial-gradient(circle at center, rgba(245,243,239,0.2) 0%, #f5f3ef 80%);
-      z-index: 1;
+      display: none;
     }
 
     .access-input {
@@ -276,7 +263,7 @@
 <body class="min-h-screen flex flex-col font-sans bg-cream text-charcoal">
 
   <!-- ==================== LOGIN VIEW ==================== -->
-  <main id="login-view" class="view active flex-col items-center justify-center min-h-screen w-full relative">
+  <main id="login-view" class="view active flex-col items-center justify-center min-h-screen w-full relative" style="background: linear-gradient(to bottom, #ede9e1 0%, #cec7bb 55%, #b0a897 100%);">
     <div id="login-bg"></div>
     <div class="login-overlay"></div>
 
@@ -310,15 +297,8 @@
   </main>
 
   <!-- ==================== VERIFICATION VIEW ==================== -->
-  <main id="verification-view" class="view flex-col items-center justify-center min-h-screen w-full relative">
-    <div id="login-bg-2" style="
-      position: absolute; inset: 0;
-      background-image: url('https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?auto=format&fit=crop&q=80&w=2000');
-      background-size: cover; background-position: center;
-      opacity: 0.08;
-      filter: grayscale(60%) contrast(110%);
-      z-index: 0;
-    "></div>
+  <main id="verification-view" class="view flex-col items-center justify-center min-h-screen w-full relative" style="background: linear-gradient(to bottom, #ede9e1 0%, #cec7bb 55%, #b0a897 100%);">
+    <div id="login-bg-2"></div>
     <div class="login-overlay"></div>
 
     <div class="login-card relative z-10 flex flex-col items-center w-full max-w-sm px-10 py-14 bg-cream/80 backdrop-blur-sm border border-border mx-4 shadow-sm" style="box-sizing: border-box;">
@@ -447,24 +427,40 @@
 
           <div class="space-y-0 mb-10">
             <div class="spec-row">
-              <span class="text-[0.65rem] uppercase tracking-widest text-muted">Reference</span>
+              <span class="text-[0.65rem] uppercase tracking-widest text-muted">Reference Number</span>
               <span id="pdp-ref" class="text-sm font-medium text-charcoal"></span>
             </div>
             <div class="spec-row mt-4">
-              <span class="text-[0.65rem] uppercase tracking-widest text-muted">Diameter</span>
+              <span class="text-[0.65rem] uppercase tracking-widest text-muted">Case Material</span>
+              <span id="pdp-mat" class="text-sm font-medium text-charcoal"></span>
+            </div>
+            <div class="spec-row mt-4">
+              <span class="text-[0.65rem] uppercase tracking-widest text-muted">Case Diameter</span>
               <span id="pdp-diam" class="text-sm font-medium text-charcoal"></span>
             </div>
             <div class="spec-row mt-4">
-              <span class="text-[0.65rem] uppercase tracking-widest text-muted">Material</span>
-              <span id="pdp-mat" class="text-sm font-medium text-charcoal"></span>
+              <span class="text-[0.65rem] uppercase tracking-widest text-muted">Dial Color</span>
+              <span id="pdp-dial-color" class="text-sm font-medium text-charcoal"></span>
+            </div>
+            <div class="spec-row mt-4">
+              <span class="text-[0.65rem] uppercase tracking-widest text-muted">Dial Numerals</span>
+              <span id="pdp-dial-numerals" class="text-sm font-medium text-charcoal"></span>
+            </div>
+            <div class="spec-row mt-4">
+              <span class="text-[0.65rem] uppercase tracking-widest text-muted">Bezel Color</span>
+              <span id="pdp-bezel-color" class="text-sm font-medium text-charcoal"></span>
+            </div>
+            <div class="spec-row mt-4">
+              <span class="text-[0.65rem] uppercase tracking-widest text-muted">Bracelet Material</span>
+              <span id="pdp-bracelet-material" class="text-sm font-medium text-charcoal"></span>
+            </div>
+            <div class="spec-row mt-4">
+              <span class="text-[0.65rem] uppercase tracking-widest text-muted">Bracelet Color</span>
+              <span id="pdp-bracelet-color" class="text-sm font-medium text-charcoal"></span>
             </div>
             <div class="spec-row mt-4">
               <span class="text-[0.65rem] uppercase tracking-widest text-muted">Movement</span>
               <span id="pdp-mov" class="text-sm font-medium text-charcoal"></span>
-            </div>
-            <div class="spec-row mt-4">
-              <span class="text-[0.65rem] uppercase tracking-widest text-muted">Power Reserve</span>
-              <span id="pdp-res" class="text-sm font-medium text-charcoal"></span>
             </div>
           </div>
 
@@ -723,14 +719,18 @@
 
       const openPDP = (watch) => {
         document.getElementById('pdp-img').src    = watch.img;
-        document.getElementById('pdp-title').textContent = watch.title || 'Timepiece';
-        document.getElementById('pdp-name').textContent  = watch.name;
-        document.getElementById('pdp-desc').textContent  = watch.desc;
-        document.getElementById('pdp-ref').textContent   = watch.ref;
-        document.getElementById('pdp-diam').textContent  = watch.diam;
-        document.getElementById('pdp-mat').textContent   = watch.material;
-        document.getElementById('pdp-mov').textContent   = watch.movement;
-        document.getElementById('pdp-res').textContent   = watch.reserve;
+        document.getElementById('pdp-title').textContent            = watch.title || '';
+        document.getElementById('pdp-name').textContent             = watch.name;
+        document.getElementById('pdp-desc').textContent             = '';
+        document.getElementById('pdp-ref').textContent              = watch.ref || '—';
+        document.getElementById('pdp-mat').textContent              = watch.material || '—';
+        document.getElementById('pdp-diam').textContent             = watch.diam || '—';
+        document.getElementById('pdp-dial-color').textContent       = watch.dialColor || '—';
+        document.getElementById('pdp-dial-numerals').textContent    = watch.dialNumerals || '—';
+        document.getElementById('pdp-bezel-color').textContent      = watch.bezelColor || '—';
+        document.getElementById('pdp-bracelet-material').textContent= watch.braceletMaterial || '—';
+        document.getElementById('pdp-bracelet-color').textContent   = watch.braceletColor || '—';
+        document.getElementById('pdp-mov').textContent              = watch.movement || '—';
 
         switchView(collectionView, pdpView);
 

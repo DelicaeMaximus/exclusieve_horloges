@@ -58,18 +58,19 @@ module.exports = async function handler(req, res) {
       .select('*')
       .in('id', watchIds)
     watches = (watchData || []).map(w => ({
-      id:       w.id,
-      name:     w.name,
-      title:    w.title,
-      ref:      w.ref,
-      material: w.material,
-      diam:     w.diam,
-      movement: w.movement,
-      reserve:  w.reserve,
-      wr:       w.wr,
-      strap:    w.strap,
-      desc:     w.description,
-      img:      w.img
+      id:              w.id,
+      name:            w.name,
+      title:           w.title,
+      ref:             w.ref,
+      material:        w.material,
+      diam:            w.diam,
+      dialColor:       w.dial_color,
+      dialNumerals:    w.dial_numerals,
+      bezelColor:      w.bezel_color,
+      braceletMaterial:w.bracelet_material,
+      braceletColor:   w.bracelet_color,
+      movement:        w.movement,
+      img:             w.img
     }))
   }
 

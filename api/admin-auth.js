@@ -12,6 +12,10 @@ module.exports = async function handler(req, res) {
   const validEmail    = process.env.ADMIN_EMAIL
   const validPassword = process.env.ADMIN_PASSWORD
 
+  if (!validEmail || !validPassword) {
+    return res.status(500).json({ error: 'Server misconfigured: missing env vars.' })
+  }
+
   if (email.trim().toLowerCase() !== validEmail.toLowerCase() || password !== validPassword) {
     return res.status(401).json({ error: 'Invalid credentials.' })
   }

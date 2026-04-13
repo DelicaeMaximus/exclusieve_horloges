@@ -158,7 +158,7 @@
 <!-- ============================= LOGIN ============================= -->
 <div id="admin-login">
   <div style="width:100%;max-width:360px;padding:0 1.5rem;">
-    <h1 style="font-family:'Inter',sans-serif;font-size:1.5rem;font-weight:600;color:#091813;text-align:center;letter-spacing:.25em;margin-bottom:.25rem;">MAX</h1>
+    <h1 style="font-family:'Inter',sans-serif;font-size:1.5rem;font-weight:600;color:#091813;text-align:center;letter-spacing:.25em;margin-bottom:.25rem;">Deliciae Maximus</h1>
     <p style="text-align:center;font-size:.65rem;letter-spacing:.25em;color:#a8a49e;margin-bottom:3rem;">ADMIN PORTAL</p>
 
     <form id="login-form">
@@ -349,46 +349,49 @@
       <!-- Specs -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem;">
         <div>
-          <label class="lbl">Watch Name *</label>
-          <input type="text" id="wf-name" required class="ai" placeholder="e.g. Ref. 5711/1A">
+          <label class="lbl">Brand *</label>
+          <input type="text" id="wf-title" required class="ai" placeholder="e.g. Patek Philippe">
         </div>
         <div>
-          <label class="lbl">Subtitle / Type</label>
-          <input type="text" id="wf-title" class="ai" placeholder="e.g. Nautilus">
+          <label class="lbl">Model *</label>
+          <input type="text" id="wf-name" required class="ai" placeholder="e.g. Nautilus">
         </div>
         <div>
-          <label class="lbl">Reference Number *</label>
-          <input type="text" id="wf-ref" required class="ai" placeholder="e.g. 5711/1A-010">
-        </div>
-        <div>
-          <label class="lbl">Case Diameter</label>
-          <input type="text" id="wf-diam" class="ai" placeholder="e.g. 40mm">
+          <label class="lbl">Reference Number</label>
+          <input type="text" id="wf-ref" class="ai" placeholder="e.g. 5711/1A-010">
         </div>
         <div>
           <label class="lbl">Case Material</label>
           <input type="text" id="wf-mat" class="ai" placeholder="e.g. Stainless Steel">
         </div>
         <div>
+          <label class="lbl">Case Diameter</label>
+          <input type="text" id="wf-diam" class="ai" placeholder="e.g. 40mm">
+        </div>
+        <div>
+          <label class="lbl">Dial Color</label>
+          <input type="text" id="wf-dial-color" class="ai" placeholder="e.g. Blue">
+        </div>
+        <div>
+          <label class="lbl">Dial Numerals</label>
+          <input type="text" id="wf-dial-numerals" class="ai" placeholder="e.g. Arabic / Roman / Index">
+        </div>
+        <div>
+          <label class="lbl">Bezel Color</label>
+          <input type="text" id="wf-bezel-color" class="ai" placeholder="e.g. Silver">
+        </div>
+        <div>
+          <label class="lbl">Bracelet Material</label>
+          <input type="text" id="wf-bracelet-material" class="ai" placeholder="e.g. Stainless Steel">
+        </div>
+        <div>
+          <label class="lbl">Bracelet Color</label>
+          <input type="text" id="wf-bracelet-color" class="ai" placeholder="e.g. Silver">
+        </div>
+        <div style="grid-column:1/-1;">
           <label class="lbl">Movement</label>
           <input type="text" id="wf-mov" class="ai" placeholder="e.g. Caliber 26-330 S C">
         </div>
-        <div>
-          <label class="lbl">Power Reserve</label>
-          <input type="text" id="wf-res" class="ai" placeholder="e.g. 45 hours">
-        </div>
-        <div>
-          <label class="lbl">Water Resistance</label>
-          <input type="text" id="wf-wr" class="ai" placeholder="e.g. 120m">
-        </div>
-        <div style="grid-column:1/-1;">
-          <label class="lbl">Strap Options</label>
-          <input type="text" id="wf-strap" class="ai" placeholder="e.g. Integrated Steel Bracelet, Blue Alligator">
-        </div>
-      </div>
-
-      <div style="margin-bottom:.75rem;">
-        <label class="lbl">Description</label>
-        <textarea id="wf-desc" class="ai" rows="3" placeholder="Short elegant description of the piece…"></textarea>
       </div>
 
       <hr class="div">
@@ -439,16 +442,20 @@ const clientToDB = c => ({
 
 const watchToJS = w => ({
   id: w.id, name: w.name, title: w.title || '', ref: w.ref || '',
-  diam: w.diam || '', material: w.material || '', movement: w.movement || '',
-  reserve: w.reserve || '', wr: w.wr || '', strap: w.strap || '',
-  desc: w.description || '', img: w.img || ''
+  material: w.material || '', diam: w.diam || '',
+  dialColor: w.dial_color || '', dialNumerals: w.dial_numerals || '',
+  bezelColor: w.bezel_color || '', braceletMaterial: w.bracelet_material || '',
+  braceletColor: w.bracelet_color || '', movement: w.movement || '',
+  img: w.img || ''
 });
 
 const watchToDB = w => ({
   id: w.id, name: w.name, title: w.title || null, ref: w.ref || null,
-  diam: w.diam || null, material: w.material || null, movement: w.movement || null,
-  reserve: w.reserve || null, wr: w.wr || null, strap: w.strap || null,
-  description: w.desc || null, img: w.img || null
+  material: w.material || null, diam: w.diam || null,
+  dial_color: w.dialColor || null, dial_numerals: w.dialNumerals || null,
+  bezel_color: w.bezelColor || null, bracelet_material: w.braceletMaterial || null,
+  bracelet_color: w.braceletColor || null, movement: w.movement || null,
+  img: w.img || null
 });
 
 const logToJS = l => ({
@@ -710,9 +717,14 @@ let _imgData = '';
 
 function resetWatchForm() {
   document.getElementById('watch-form').reset();
-  document.getElementById('wf-id').value       = '';
-  document.getElementById('wf-img-data').value = '';
-  document.getElementById('wf-img-url').value  = '';
+  document.getElementById('wf-id').value                = '';
+  document.getElementById('wf-img-data').value          = '';
+  document.getElementById('wf-img-url').value           = '';
+  document.getElementById('wf-dial-color').value        = '';
+  document.getElementById('wf-dial-numerals').value     = '';
+  document.getElementById('wf-bezel-color').value       = '';
+  document.getElementById('wf-bracelet-material').value = '';
+  document.getElementById('wf-bracelet-color').value    = '';
   _imgData = '';
   const p = document.getElementById('img-preview');
   p.style.display = 'none'; p.src = '';
@@ -760,16 +772,17 @@ document.getElementById('watch-form').addEventListener('submit', async e => {
 
   const watch = {
     id, img,
-    name:     document.getElementById('wf-name').value,
-    title:    document.getElementById('wf-title').value,
-    ref:      document.getElementById('wf-ref').value,
-    diam:     document.getElementById('wf-diam').value,
-    material: document.getElementById('wf-mat').value,
-    movement: document.getElementById('wf-mov').value,
-    reserve:  document.getElementById('wf-res').value,
-    wr:       document.getElementById('wf-wr').value,
-    strap:    document.getElementById('wf-strap').value,
-    desc:     document.getElementById('wf-desc').value,
+    title:           document.getElementById('wf-title').value,
+    name:            document.getElementById('wf-name').value,
+    ref:             document.getElementById('wf-ref').value,
+    material:        document.getElementById('wf-mat').value,
+    diam:            document.getElementById('wf-diam').value,
+    dialColor:       document.getElementById('wf-dial-color').value,
+    dialNumerals:    document.getElementById('wf-dial-numerals').value,
+    bezelColor:      document.getElementById('wf-bezel-color').value,
+    braceletMaterial:document.getElementById('wf-bracelet-material').value,
+    braceletColor:   document.getElementById('wf-bracelet-color').value,
+    movement:        document.getElementById('wf-mov').value,
   };
 
   const { error } = await db.from('watches').upsert(watchToDB(watch));
@@ -809,17 +822,18 @@ window.editWatch = async id => {
   const w = watches.find(x => x.id === id);
   if (!w) return;
   resetWatchForm();
-  document.getElementById('wf-id').value    = w.id;
-  document.getElementById('wf-name').value  = w.name;
-  document.getElementById('wf-title').value = w.title || '';
-  document.getElementById('wf-ref').value   = w.ref || '';
-  document.getElementById('wf-diam').value  = w.diam || '';
-  document.getElementById('wf-mat').value   = w.material || '';
-  document.getElementById('wf-mov').value   = w.movement || '';
-  document.getElementById('wf-res').value   = w.reserve || '';
-  document.getElementById('wf-wr').value    = w.wr || '';
-  document.getElementById('wf-strap').value = w.strap || '';
-  document.getElementById('wf-desc').value  = w.desc || '';
+  document.getElementById('wf-id').value                 = w.id;
+  document.getElementById('wf-title').value              = w.title || '';
+  document.getElementById('wf-name').value               = w.name;
+  document.getElementById('wf-ref').value                = w.ref || '';
+  document.getElementById('wf-mat').value                = w.material || '';
+  document.getElementById('wf-diam').value               = w.diam || '';
+  document.getElementById('wf-dial-color').value         = w.dialColor || '';
+  document.getElementById('wf-dial-numerals').value      = w.dialNumerals || '';
+  document.getElementById('wf-bezel-color').value        = w.bezelColor || '';
+  document.getElementById('wf-bracelet-material').value  = w.braceletMaterial || '';
+  document.getElementById('wf-bracelet-color').value     = w.braceletColor || '';
+  document.getElementById('wf-mov').value                = w.movement || '';
   if (w.img) {
     document.getElementById('wf-img-url').value  = w.img;
     document.getElementById('wf-img-data').value = w.img;
