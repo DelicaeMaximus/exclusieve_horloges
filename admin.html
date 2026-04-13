@@ -482,7 +482,7 @@ async function getLogs() {
 }
 
 /* ------------------------------------------------------------------ */
-/* AUTH — Supabase Auth (email + password)                             */
+/* AUTH                                                                 */
 /* ------------------------------------------------------------------ */
 const loginScreen = document.getElementById('admin-login');
 const dashboard   = document.getElementById('dashboard');
@@ -493,26 +493,29 @@ function showDashboard() {
 }
 
 // Restore session if still active
-db.auth.getSession().then(({ data: { session } }) => {
-  if (session) showDashboard();
-});
+if (sessionStorage.getItem('admin_auth') === '1') showDashboard();
 
 document.getElementById('login-form').addEventListener('submit', async e => {
   e.preventDefault();
   const email = document.getElementById('l-email').value.trim();
   const pass  = document.getElementById('l-pass').value;
-  const { error } = await db.auth.signInWithPassword({ email, password: pass });
-  if (error) {
+  const res   = await fetch('/api/admin-auth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password: pass })
+  });
+  if (!res.ok) {
     const err = document.getElementById('l-err');
     err.style.display = 'block';
     setTimeout(() => err.style.display = 'none', 3000);
   } else {
+    sessionStorage.setItem('admin_auth', '1');
     showDashboard();
   }
 });
 
-document.getElementById('logout-btn').addEventListener('click', async () => {
-  await db.auth.signOut();
+document.getElementById('logout-btn').addEventListener('click', () => {
+  sessionStorage.removeItem('admin_auth');
   location.reload();
 });
 
