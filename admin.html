@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MAX — Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter','sans-serif'] },
+        }
+      }
+    }
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin:0; background:#f5f3ef; color:#6b7a74; font-family:'Inter',sans-serif; font-size:13px; }
+
+    /* ---------- LOGIN ---------- */
+    #admin-login {
+      position:fixed; inset:0; background:#f5f3ef;
+      display:flex; align-items:center; justify-content:center;
+      z-index:9999; transition:opacity .6s ease;
+    }
+    #admin-login.fade-out { opacity:0; pointer-events:none; }
+
+    /* ---------- INPUTS ---------- */
+    .ai {
+      background:#fff; border:1px solid #ddd9d2; color:#091813;
+      padding:.5rem .75rem; border-radius:.3rem; width:100%;
+      font-family:inherit; font-size:.8rem; transition:border-color .2s;
+    }
+    .ai:focus { outline:none; border-color:#0d3d2b; }
+    .ai::placeholder { color:#b8b4ae; }
+    select.ai option { background:#fff; color:#091813; }
+    textarea.ai { resize:vertical; }
+
+    /* ---------- BUTTONS ---------- */
+    .btn {
+      background:#fff; border:1px solid #ddd9d2; color:#091813;
+      padding:.4rem .9rem; border-radius:.3rem; cursor:pointer;
+      font-family:inherit; font-size:.75rem; transition:all .15s;
+    }
+    .btn:hover { background:#eeebe6; border-color:#c8c4bc; }
+    .btn-gold { background:#0d3d2b; border-color:#0d3d2b; color:#f5f3ef; font-weight:500; }
+    .btn-gold:hover { background:#1a5c3e; border-color:#1a5c3e; }
+    .btn-ghost { background:none; border:none; cursor:pointer; font-family:inherit; font-size:.75rem; transition:color .15s; }
+
+    /* ---------- SIDEBAR ---------- */
+    #sidebar {
+      position:fixed; top:0; left:0; bottom:0; width:210px;
+      background:#fff; border-right:1px solid #ddd9d2;
+      display:flex; flex-direction:column;
+      z-index: 100;
+    }
+    .nav-btn {
+      display:block; width:100%; text-align:left;
+      padding:.7rem 1.25rem; background:none; border:none; border-left:2px solid transparent;
+      color:#a8a49e; font-family:inherit; font-size:.75rem; letter-spacing:.05em;
+      cursor:pointer; transition:all .15s;
+    }
+    .nav-btn:hover { color:#091813; background:#f5f3ef; }
+    .nav-btn.active { color:#091813; border-left-color:#0d3d2b; background:#f5f3ef; }
+
+    /* ---------- MAIN ---------- */
+    #main { margin-left:210px; padding:2.5rem; min-height:100vh; }
+
+    /* ---------- MOBILE RESPONSIVE ---------- */
+    @media (max-width: 768px) {
+      #sidebar {
+        position: relative;
+        width: 100%;
+        bottom: auto;
+        flex-direction: column;
+        border-right: none;
+        border-bottom: 1px solid #ddd9d2;
+      }
+      #sidebar nav { display: flex; flex-direction: row; overflow-x: auto; padding: .25rem 0; }
+      .nav-btn { border-left: none; border-bottom: 2px solid transparent; padding: .6rem 1rem; white-space: nowrap; }
+      .nav-btn.active { border-left: none; border-bottom-color: #0d3d2b; }
+      #main { margin-left: 0; padding: 1.25rem; }
+      .tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      table { min-width: 600px; }
+      #s-clients table { min-width: 820px; }
+      #s-clients td:last-child { white-space: nowrap; }
+      #watches-grid { grid-template-columns: 1fr !important; }
+      .modal-box { max-width: 100% !important; margin: 1rem; max-height: 92vh; }
+      #admin-login > div { padding: 0 1.25rem; }
+    }
+    @media (max-width: 480px) {
+      #client-form [style*="grid-template-columns:1fr 1fr"],
+      #watch-form [style*="grid-template-columns:1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+      }
+    }
+
+    /* ---------- TABLE ---------- */
+    .tbl-wrap { background:#fff; border:1px solid #ddd9d2; border-radius:.4rem; overflow:hidden; }
+    table { width:100%; border-collapse:collapse; }
+    thead tr { border-bottom:1px solid #eeebe6; }
+    th { padding:.7rem 1rem; color:#a8a49e; font-size:.65rem; text-transform:uppercase; letter-spacing:.1em; font-weight:500; text-align:left; }
+    td { padding:.85rem 1rem; border-bottom:1px solid #f0ede8; vertical-align:middle; color:#091813; }
+    tbody tr:last-child td { border-bottom:none; }
+    tbody tr:hover td { background:#faf8f5; }
+
+    /* ---------- SECTIONS ---------- */
+    .section { display:none; }
+    .section.active { display:block; }
+
+    /* ---------- MODAL ---------- */
+    .modal-wrap {
+      position:fixed; inset:0; background:rgba(9,24,19,.35);
+      display:flex; align-items:center; justify-content:center;
+      z-index:800; opacity:0; pointer-events:none; transition:opacity .25s;
+    }
+    .modal-wrap.open { opacity:1; pointer-events:all; }
+    .modal-box {
+      background:#fff; border:1px solid #ddd9d2; border-radius:.5rem;
+      padding:1.75rem; width:100%; max-width:620px;
+      max-height:90vh; overflow-y:auto;
+    }
+    .modal-box::-webkit-scrollbar { width:4px; }
+    .modal-box::-webkit-scrollbar-thumb { background:#c8c4bc; border-radius:4px; }
+
+    /* ---------- IMAGE UPLOAD ---------- */
+    .upload-zone {
+      border:1px dashed #c8c4bc; border-radius:.35rem;
+      padding:1.25rem; text-align:center; cursor:pointer;
+      position:relative; transition:border-color .2s;
+    }
+    .upload-zone:hover { border-color:#0d3d2b; }
+    .upload-zone input[type=file] {
+      position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;
+    }
+    #img-preview {
+      width:100%; height:130px; object-fit:cover;
+      border-radius:.25rem; margin-top:.6rem; display:none;
+    }
+
+    /* ---------- BADGES ---------- */
+    .badge { display:inline-block; padding:.1rem .45rem; border-radius:.2rem; font-size:.65rem; letter-spacing:.04em; }
+    .badge-g { background:rgba(13,61,43,.08); color:#0d3d2b; border:1px solid rgba(13,61,43,.2); }
+    .badge-y { background:rgba(161,124,0,.08); color:#7a5c00; border:1px solid rgba(161,124,0,.2); }
+    .badge-r { background:rgba(184,50,50,.08); color:#b83232; border:1px solid rgba(184,50,50,.2); }
+
+    /* ---------- DIVIDER ---------- */
+    hr.div { border:none; border-top:1px solid #eeebe6; margin:1.25rem 0; }
+
+    /* ---------- LABEL ---------- */
+    .lbl { display:block; margin-bottom:.4rem; color:#a8a49e; font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; }
+  </style>
+</head>
+<body>
+
+<!-- ============================= LOGIN ============================= -->
+<div id="admin-login">
+  <div style="width:100%;max-width:360px;padding:0 1.5rem;">
+    <h1 style="font-family:'Inter',sans-serif;font-size:1.5rem;font-weight:600;color:#091813;text-align:center;letter-spacing:.25em;margin-bottom:.25rem;">MAX</h1>
+    <p style="text-align:center;font-size:.65rem;letter-spacing:.25em;color:#a8a49e;margin-bottom:3rem;">ADMIN PORTAL</p>
+
+    <form id="login-form">
+      <div style="margin-bottom:1rem;">
+        <label class="lbl">Email</label>
+        <input type="email" id="l-email" class="ai" placeholder="admin@example.com" autocomplete="off">
+      </div>
+      <div style="margin-bottom:1.25rem;">
+        <label class="lbl">Password</label>
+        <input type="password" id="l-pass" class="ai" placeholder="••••••••">
+      </div>
+      <p id="l-err" style="color:#cc4b4b;font-size:.75rem;text-align:center;margin-bottom:.75rem;display:none;">Incorrect credentials.</p>
+      <button type="submit" class="btn btn-gold" style="width:100%;padding:.6rem;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;">Enter</button>
+    </form>
+  </div>
+</div>
+
+<!-- ============================= DASHBOARD ============================= -->
+<div id="dashboard" style="display:none;">
+
+  <!-- Sidebar / Mobile Top Nav -->
+  <div id="sidebar">
+    <div style="padding:.85rem 1.25rem;border-bottom:1px solid #ddd9d2;">
+      <span style="font-family:'Inter',sans-serif;font-size:.75rem;font-weight:600;color:#091813;letter-spacing:.06em;">Deliciae Maximus</span>
+    </div>
+    <nav style="flex:1;padding:.5rem 0;">
+      <button class="nav-btn active" data-target="s-clients">Clients</button>
+      <button class="nav-btn" data-target="s-watches">Watches</button>
+      <button class="nav-btn" data-target="s-logs">Activity Logs</button>
+    </nav>
+    <div style="padding:.85rem 1.25rem;border-top:1px solid #ddd9d2;">
+      <button id="logout-btn" class="btn" style="font-size:.7rem;width:100%;">Log Out</button>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div id="main">
+
+    <!-- CLIENTS -->
+    <section id="s-clients" class="section active">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.75rem;margin-bottom:1.5rem;">
+        <div>
+          <h2 style="color:#f0ede8;font-weight:300;font-size:1.4rem;margin:0 0 .25rem;">Clients</h2>
+          <p style="color:#3a3a3a;font-size:.75rem;margin:0;">Manage access codes and watch assignments.</p>
+        </div>
+        <button id="add-client-btn" class="btn btn-gold">+ New Client</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Phone</th>
+              <th>Access Code</th>
+              <th>Expiry</th>
+              <th>Device</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="clients-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- WATCHES -->
+    <section id="s-watches" class="section">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:2rem;">
+        <div>
+          <h2 style="color:#f0ede8;font-weight:300;font-size:1.4rem;margin:0 0 .25rem;">Master Collection</h2>
+          <p style="color:#3a3a3a;font-size:.75rem;margin:0;">Watches available for client assignment.</p>
+        </div>
+        <button id="add-watch-btn" class="btn btn-gold">+ Add Watch</button>
+      </div>
+      <div id="watches-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1.25rem;"></div>
+    </section>
+
+    <!-- LOGS -->
+    <section id="s-logs" class="section">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:2rem;">
+        <div>
+          <h2 style="color:#f0ede8;font-weight:300;font-size:1.4rem;margin:0 0 .25rem;">Activity Logs</h2>
+          <p style="color:#3a3a3a;font-size:.75rem;margin:0;">All client login attempts in real time.</p>
+        </div>
+        <button id="clear-logs-btn" class="btn">Clear Logs</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Client</th>
+              <th>Code Used</th>
+              <th>Status</th>
+              <th>Reason</th>
+              <th>Device ID</th>
+            </tr>
+          </thead>
+          <tbody id="logs-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </div><!-- /main -->
+</div><!-- /dashboard -->
+
+
+<!-- ============================= CLIENT MODAL ============================= -->
+<div id="client-modal" class="modal-wrap">
+  <div class="modal-box">
+    <h3 id="client-modal-title" style="color:#f0ede8;font-weight:400;font-size:1rem;margin:0 0 1.25rem;">New Client</h3>
+    <form id="client-form">
+      <input type="hidden" id="cf-id">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem;">
+        <div>
+          <label class="lbl">Name *</label>
+          <input type="text" id="cf-name" required class="ai" placeholder="Full name">
+        </div>
+        <div>
+          <label class="lbl">Email *</label>
+          <input type="email" id="cf-email" required class="ai" placeholder="email@example.com">
+        </div>
+        <div>
+          <label class="lbl">Phone Number</label>
+          <input type="tel" id="cf-phone" class="ai" placeholder="+31 6 00 000 000">
+        </div>
+        <div>
+          <label class="lbl">Code Expiry</label>
+          <select id="cf-expiry" class="ai">
+            <option value="none">No Expiry</option>
+            <option value="once">One-Time Login</option>
+            <option value="24">24 Hours</option>
+            <option value="48">48 Hours</option>
+            <option value="168">7 Days</option>
+          </select>
+        </div>
+      </div>
+
+      <hr class="div">
+
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem;">
+          <label class="lbl" style="margin-bottom:0;">Assign Watches</label>
+          <div style="display:flex;gap:.4rem;">
+            <button type="button" id="select-all-watches-btn" class="btn" style="font-size:.65rem;padding:.25rem .6rem;">Select All</button>
+            <button type="button" id="deselect-all-watches-btn" class="btn" style="font-size:.65rem;padding:.25rem .6rem;">Deselect All</button>
+          </div>
+        </div>
+        <div id="cf-watches" style="border:1px solid #1c1c1c;border-radius:.3rem;padding:.75rem;max-height:180px;overflow-y:auto;"></div>
+      </div>
+
+      <hr class="div">
+
+      <div style="display:flex;justify-content:flex-end;gap:.5rem;">
+        <button type="button" class="btn close-client-btn">Cancel</button>
+        <button type="submit" class="btn btn-gold">Save Client</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- ============================= WATCH MODAL ============================= -->
+<div id="watch-modal" class="modal-wrap">
+  <div class="modal-box">
+    <h3 id="watch-modal-title" style="color:#f0ede8;font-weight:400;font-size:1rem;margin:0 0 1.25rem;">Add Watch</h3>
+    <form id="watch-form">
+      <input type="hidden" id="wf-id">
+      <input type="hidden" id="wf-img-data">
+
+      <!-- Photo -->
+      <div style="margin-bottom:1rem;">
+        <label class="lbl">Watch Photo</label>
+        <div class="upload-zone" id="upload-zone">
+          <input type="file" id="wf-img-file" accept="image/*">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="1.5" style="margin:0 auto .5rem;display:block;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <span style="font-size:.75rem;color:#444;">Click to upload a photo</span><br>
+          <span style="font-size:.65rem;color:#2a2a2a;">JPG, PNG or WEBP — max 5 MB</span>
+        </div>
+        <img id="img-preview" alt="Preview">
+        <div style="margin-top:.5rem;">
+          <label class="lbl" style="margin-top:.5rem;">Or paste an image URL</label>
+          <input type="url" id="wf-img-url" class="ai" placeholder="https://images.unsplash.com/…">
+        </div>
+      </div>
+
+      <hr class="div">
+
+      <!-- Specs -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem;">
+        <div>
+          <label class="lbl">Watch Name *</label>
+          <input type="text" id="wf-name" required class="ai" placeholder="e.g. Ref. 5711/1A">
+        </div>
+        <div>
+          <label class="lbl">Subtitle / Type</label>
+          <input type="text" id="wf-title" class="ai" placeholder="e.g. Nautilus">
+        </div>
+        <div>
+          <label class="lbl">Reference Number *</label>
+          <input type="text" id="wf-ref" required class="ai" placeholder="e.g. 5711/1A-010">
+        </div>
+        <div>
+          <label class="lbl">Case Diameter</label>
+          <input type="text" id="wf-diam" class="ai" placeholder="e.g. 40mm">
+        </div>
+        <div>
+          <label class="lbl">Case Material</label>
+          <input type="text" id="wf-mat" class="ai" placeholder="e.g. Stainless Steel">
+        </div>
+        <div>
+          <label class="lbl">Movement</label>
+          <input type="text" id="wf-mov" class="ai" placeholder="e.g. Caliber 26-330 S C">
+        </div>
+        <div>
+          <label class="lbl">Power Reserve</label>
+          <input type="text" id="wf-res" class="ai" placeholder="e.g. 45 hours">
+        </div>
+        <div>
+          <label class="lbl">Water Resistance</label>
+          <input type="text" id="wf-wr" class="ai" placeholder="e.g. 120m">
+        </div>
+        <div style="grid-column:1/-1;">
+          <label class="lbl">Strap Options</label>
+          <input type="text" id="wf-strap" class="ai" placeholder="e.g. Integrated Steel Bracelet, Blue Alligator">
+        </div>
+      </div>
+
+      <div style="margin-bottom:.75rem;">
+        <label class="lbl">Description</label>
+        <textarea id="wf-desc" class="ai" rows="3" placeholder="Short elegant description of the piece…"></textarea>
+      </div>
+
+      <hr class="div">
+
+      <div style="display:flex;justify-content:flex-end;gap:.5rem;">
+        <button type="button" class="btn close-watch-btn">Cancel</button>
+        <button type="submit" class="btn btn-gold">Save Watch</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- ============================= JS ============================= -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+/* ------------------------------------------------------------------ */
+/* SUPABASE CLIENT                                                      */
+/* ------------------------------------------------------------------ */
+const { createClient } = supabase;
+const db = createClient(
+  'https://qfueinmkltxmkkjvpomr.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmdWVpbm1rbHR4bWtranZwb21yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwOTc2MjYsImV4cCI6MjA5MTY3MzYyNn0.3OFPP5MkEk7c-3kP2KgRd65IGxWOCA0LQBWmPb8JEdg'
+);
+
+/* ------------------------------------------------------------------ */
+/* TRANSLATION HELPERS  (JS camelCase <-> DB snake_case)               */
+/* ------------------------------------------------------------------ */
+const clientToJS = c => ({
+  id: c.id, name: c.name, email: c.email, phone: c.phone || '',
+  code: c.code,
+  expirySetting: c.expiry_setting || 'none',
+  expiryTime:    c.expiry_time    || null,
+  onceUsed:      c.once_used      || false,
+  fingerprintId: c.fingerprint_id || null,
+  watches:       c.watches        || []
+});
+
+const clientToDB = c => ({
+  id: c.id, name: c.name, email: c.email, phone: c.phone || null,
+  code: c.code,
+  expiry_setting: c.expirySetting || 'none',
+  expiry_time:    c.expiryTime    || null,
+  once_used:      c.onceUsed      || false,
+  fingerprint_id: c.fingerprintId || null,
+  watches:        c.watches       || []
+});
+
+const watchToJS = w => ({
+  id: w.id, name: w.name, title: w.title || '', ref: w.ref || '',
+  diam: w.diam || '', material: w.material || '', movement: w.movement || '',
+  reserve: w.reserve || '', wr: w.wr || '', strap: w.strap || '',
+  desc: w.description || '', img: w.img || ''
+});
+
+const watchToDB = w => ({
+  id: w.id, name: w.name, title: w.title || null, ref: w.ref || null,
+  diam: w.diam || null, material: w.material || null, movement: w.movement || null,
+  reserve: w.reserve || null, wr: w.wr || null, strap: w.strap || null,
+  description: w.desc || null, img: w.img || null
+});
+
+const logToJS = l => ({
+  timestamp:  l.created_at,
+  code:       l.code        || '',
+  success:    l.success,
+  reason:     l.reason      || '',
+  clientName: l.client_name || 'Unknown',
+  device:     l.device      || ''
+});
+
+/* ------------------------------------------------------------------ */
+/* DATA FUNCTIONS                                                       */
+/* ------------------------------------------------------------------ */
+async function getClients() {
+  const { data, error } = await db.from('clients').select('*').order('created_at');
+  if (error) { console.error('getClients:', error); return []; }
+  return (data || []).map(clientToJS);
+}
+
+async function getWatches() {
+  const { data, error } = await db.from('watches').select('*').order('created_at');
+  if (error) { console.error('getWatches:', error); return []; }
+  return (data || []).map(watchToJS);
+}
+
+async function getLogs() {
+  const { data, error } = await db.from('logs').select('*').order('created_at', { ascending: false });
+  if (error) { console.error('getLogs:', error); return []; }
+  return (data || []).map(logToJS);
+}
+
+/* ------------------------------------------------------------------ */
+/* AUTH — Supabase Auth (email + password)                             */
+/* ------------------------------------------------------------------ */
+const loginScreen = document.getElementById('admin-login');
+const dashboard   = document.getElementById('dashboard');
+
+function showDashboard() {
+  loginScreen.classList.add('fade-out');
+  setTimeout(() => { loginScreen.style.display = 'none'; dashboard.style.display = 'block'; refreshAll(); }, 650);
+}
+
+// Restore session if still active
+db.auth.getSession().then(({ data: { session } }) => {
+  if (session) showDashboard();
+});
+
+document.getElementById('login-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const email = document.getElementById('l-email').value.trim();
+  const pass  = document.getElementById('l-pass').value;
+  const { error } = await db.auth.signInWithPassword({ email, password: pass });
+  if (error) {
+    const err = document.getElementById('l-err');
+    err.style.display = 'block';
+    setTimeout(() => err.style.display = 'none', 3000);
+  } else {
+    showDashboard();
+  }
+});
+
+document.getElementById('logout-btn').addEventListener('click', async () => {
+  await db.auth.signOut();
+  location.reload();
+});
+
+/* ------------------------------------------------------------------ */
+/* NAV TABS                                                             */
+/* ------------------------------------------------------------------ */
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.target).classList.add('active');
+    refreshAll();
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* MODAL HELPERS                                                        */
+/* ------------------------------------------------------------------ */
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-wrap').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }));
+
+/* ------------------------------------------------------------------ */
+/* CODE GENERATOR                                                       */
+/* ------------------------------------------------------------------ */
+function generateCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let c = '';
+  for (let i = 0; i < 12; i++) {
+    c += chars[Math.floor(Math.random() * chars.length)];
+    if (i === 3 || i === 7) c += '-';
+  }
+  return c;
+}
+
+/* ------------------------------------------------------------------ */
+/* CLIENT MODAL                                                         */
+/* ------------------------------------------------------------------ */
+document.getElementById('add-client-btn').addEventListener('click', async () => {
+  document.getElementById('client-form').reset();
+  document.getElementById('cf-id').value = '';
+  document.getElementById('client-modal-title').textContent = 'New Client';
+  await renderWatchCheckboxes([]);
+  openModal('client-modal');
+});
+
+document.querySelectorAll('.close-client-btn').forEach(b => b.addEventListener('click', () => closeModal('client-modal')));
+
+document.getElementById('client-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const existingId = document.getElementById('cf-id').value;
+  const id  = existingId || 'c_' + Date.now();
+  const exp = document.getElementById('cf-expiry').value;
+
+  let expiryTime = null;
+  if (exp !== 'none' && exp !== 'once') {
+    expiryTime = new Date(Date.now() + parseInt(exp) * 3600000).toISOString();
+  }
+
+  const watches = [...document.querySelectorAll('.wcb:checked')].map(cb => cb.value);
+
+  const obj = {
+    id, watches, expiryTime,
+    expirySetting: exp,
+    onceUsed:      false,
+    fingerprintId: null,
+    code:          generateCode(),
+    name:          document.getElementById('cf-name').value,
+    email:         document.getElementById('cf-email').value,
+    phone:         document.getElementById('cf-phone').value,
+  };
+
+  // If editing: preserve code, fingerprint and onceUsed
+  if (existingId) {
+    const clients = await getClients();
+    const existing = clients.find(c => c.id === existingId);
+    if (existing) {
+      obj.code          = existing.code;
+      obj.fingerprintId = existing.fingerprintId;
+      obj.onceUsed      = existing.onceUsed;
+    }
+  }
+
+  const { error } = await db.from('clients').upsert(clientToDB(obj));
+  if (error) { alert('Error saving client: ' + error.message); return; }
+  closeModal('client-modal');
+  await renderClients();
+});
+
+async function renderWatchCheckboxes(selectedIds = []) {
+  const el = document.getElementById('cf-watches');
+  const ws = await getWatches();
+  if (!ws.length) { el.innerHTML = '<span style="color:#333;font-size:.75rem;">No watches in collection yet.</span>'; return; }
+  el.innerHTML = ws.map(w => `
+    <label style="display:flex;align-items:center;padding:.3rem 0;cursor:pointer;">
+      <input type="checkbox" class="wcb" value="${w.id}" style="margin-right:.6rem;accent-color:#b8975a;width:14px;height:14px;" ${selectedIds.includes(w.id)?'checked':''}>
+      <span style="color:#f0ede8;">${w.name}</span>
+      <span style="color:#444;margin-left:.4rem;font-size:.7rem;">${w.ref}</span>
+    </label>`).join('');
+}
+
+document.getElementById('select-all-watches-btn').addEventListener('click', () => {
+  document.querySelectorAll('.wcb').forEach(cb => cb.checked = true);
+});
+document.getElementById('deselect-all-watches-btn').addEventListener('click', () => {
+  document.querySelectorAll('.wcb').forEach(cb => cb.checked = false);
+});
+
+async function renderClients() {
+  const tbody = document.getElementById('clients-tbody');
+  const clients = await getClients();
+  if (!clients.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:#333;">No clients yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = clients.map(c => {
+    const deviceBadge = c.fingerprintId
+      ? '<span class="badge badge-g">Bound</span>'
+      : '<span class="badge badge-y">Unbound</span>';
+
+    let expBadge = '<span style="color:#444;">No expiry</span>';
+    if (c.expirySetting === 'once') {
+      expBadge = c.onceUsed
+        ? '<span class="badge badge-r">Used</span>'
+        : '<span class="badge badge-y">One-Time</span>';
+    } else if (c.expiryTime) {
+      const hoursLeft = Math.round((new Date(c.expiryTime) - Date.now()) / 3600000);
+      expBadge = hoursLeft > 0
+        ? `<span class="badge badge-g">${hoursLeft}h left</span>`
+        : '<span class="badge badge-r">Expired</span>';
+    }
+
+    return `<tr>
+      <td>
+        <div style="color:#f0ede8;font-weight:500;">${c.name}</div>
+        <div style="font-size:.7rem;color:#444;">${c.email}</div>
+      </td>
+      <td style="color:#666;">${c.phone || '—'}</td>
+      <td style="font-family:monospace;color:#b8975a;letter-spacing:.06em;">${c.code}</td>
+      <td>${expBadge}</td>
+      <td>${deviceBadge}</td>
+      <td>
+        <button onclick="editClient('${c.id}')" class="btn" style="margin-right:.3rem;">Edit</button>
+        <button onclick="resetDevice('${c.id}')" class="btn" style="margin-right:.3rem; background: #444;">Reset Device</button>
+        <button onclick="regenCode('${c.id}')" class="btn" style="margin-right:.3rem;">New Code</button>
+        <button onclick="revokeClient('${c.id}')" class="btn-ghost btn-danger" style="color:#e05555;">Revoke</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+window.editClient = async id => {
+  const clients = await getClients();
+  const c = clients.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('cf-id').value     = c.id;
+  document.getElementById('cf-name').value   = c.name;
+  document.getElementById('cf-email').value  = c.email;
+  document.getElementById('cf-phone').value  = c.phone || '';
+  document.getElementById('cf-expiry').value = c.expirySetting || 'none';
+  document.getElementById('client-modal-title').textContent = 'Edit Client — ' + c.name;
+  await renderWatchCheckboxes(c.watches || []);
+  openModal('client-modal');
+};
+
+window.resetDevice = async id => {
+  if (!confirm('Allow this code to be used on a new device? The current device binding will be removed.')) return;
+  const { error } = await db.from('clients').update({ fingerprint_id: null }).eq('id', id);
+  if (error) alert('Error: ' + error.message);
+  else await renderClients();
+};
+
+window.regenCode = async id => {
+  if (!confirm('Generate a new code? The current code stops working immediately and device binding is reset.')) return;
+  const { error } = await db.from('clients').update({ code: generateCode(), fingerprint_id: null, once_used: false }).eq('id', id);
+  if (error) alert('Error: ' + error.message);
+  else await renderClients();
+};
+
+window.revokeClient = async id => {
+  if (!confirm("Permanently revoke this client's access? This cannot be undone.")) return;
+  const { error } = await db.from('clients').delete().eq('id', id);
+  if (error) alert('Error: ' + error.message);
+  else await renderClients();
+};
+
+/* ------------------------------------------------------------------ */
+/* WATCH MODAL                                                          */
+/* ------------------------------------------------------------------ */
+let _imgData = '';
+
+function resetWatchForm() {
+  document.getElementById('watch-form').reset();
+  document.getElementById('wf-id').value       = '';
+  document.getElementById('wf-img-data').value = '';
+  document.getElementById('wf-img-url').value  = '';
+  _imgData = '';
+  const p = document.getElementById('img-preview');
+  p.style.display = 'none'; p.src = '';
+}
+
+document.getElementById('add-watch-btn').addEventListener('click', () => {
+  resetWatchForm();
+  document.getElementById('watch-modal-title').textContent = 'Add Watch';
+  openModal('watch-modal');
+});
+
+document.querySelectorAll('.close-watch-btn').forEach(b => b.addEventListener('click', () => closeModal('watch-modal')));
+
+// File upload → Supabase Storage
+document.getElementById('wf-img-file').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { alert('Image too large — max 5 MB.'); return; }
+  const ext  = file.name.split('.').pop();
+  const path = Date.now() + '.' + ext;
+  const { data, error } = await db.storage.from('watches').upload(path, file, { contentType: file.type });
+  if (error) { alert('Upload failed: ' + error.message); return; }
+  const { data: { publicUrl } } = db.storage.from('watches').getPublicUrl(data.path);
+  _imgData = publicUrl;
+  document.getElementById('wf-img-data').value = publicUrl;
+  document.getElementById('wf-img-url').value  = publicUrl;
+  const p = document.getElementById('img-preview');
+  p.src = publicUrl; p.style.display = 'block';
+});
+
+// URL input → live preview
+document.getElementById('wf-img-url').addEventListener('blur', e => {
+  const url = e.target.value.trim();
+  if (!url) return;
+  _imgData = url;
+  document.getElementById('wf-img-data').value = url;
+  const p = document.getElementById('img-preview');
+  p.src = url; p.style.display = 'block';
+});
+
+document.getElementById('watch-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const id  = document.getElementById('wf-id').value || 'w_' + Date.now();
+  const img = document.getElementById('wf-img-data').value || document.getElementById('wf-img-url').value || '';
+
+  const watch = {
+    id, img,
+    name:     document.getElementById('wf-name').value,
+    title:    document.getElementById('wf-title').value,
+    ref:      document.getElementById('wf-ref').value,
+    diam:     document.getElementById('wf-diam').value,
+    material: document.getElementById('wf-mat').value,
+    movement: document.getElementById('wf-mov').value,
+    reserve:  document.getElementById('wf-res').value,
+    wr:       document.getElementById('wf-wr').value,
+    strap:    document.getElementById('wf-strap').value,
+    desc:     document.getElementById('wf-desc').value,
+  };
+
+  const { error } = await db.from('watches').upsert(watchToDB(watch));
+  if (error) { alert('Error saving watch: ' + error.message); return; }
+  closeModal('watch-modal');
+  await renderWatches();
+});
+
+async function renderWatches() {
+  const grid = document.getElementById('watches-grid');
+  const watches = await getWatches();
+  if (!watches.length) {
+    grid.innerHTML = '<p style="color:#333;grid-column:1/-1;">No watches yet.</p>';
+    return;
+  }
+  grid.innerHTML = watches.map(w => `
+    <div style="background:#080808;border:1px solid #181818;border-radius:.4rem;overflow:hidden;display:flex;flex-direction:column;">
+      <div style="height:130px;background:#111;overflow:hidden;">
+        ${w.img
+          ? `<img src="${w.img}" style="width:100%;height:100%;object-fit:cover;opacity:.85;">`
+          : `<div style="height:100%;display:flex;align-items:center;justify-content:center;color:#2a2a2a;font-size:.7rem;">No image</div>`}
+      </div>
+      <div style="padding:.85rem;flex:1;">
+        <div style="color:#f0ede8;font-size:.85rem;font-weight:500;">${w.name}</div>
+        <div style="color:#444;font-size:.65rem;margin-top:.15rem;">${w.ref}${w.material ? ' · '+w.material : ''}</div>
+        <div style="color:#666;font-size:.72rem;margin-top:.5rem;line-height:1.55;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${w.desc || '—'}</div>
+      </div>
+      <div style="padding:.6rem .85rem;border-top:1px solid #141414;display:flex;justify-content:flex-end;gap:.4rem;">
+        <button onclick="editWatch('${w.id}')" class="btn">Edit</button>
+        <button onclick="deleteWatch('${w.id}')" class="btn-ghost" style="color:#e05555;">Remove</button>
+      </div>
+    </div>`).join('');
+}
+
+window.editWatch = async id => {
+  const watches = await getWatches();
+  const w = watches.find(x => x.id === id);
+  if (!w) return;
+  resetWatchForm();
+  document.getElementById('wf-id').value    = w.id;
+  document.getElementById('wf-name').value  = w.name;
+  document.getElementById('wf-title').value = w.title || '';
+  document.getElementById('wf-ref').value   = w.ref || '';
+  document.getElementById('wf-diam').value  = w.diam || '';
+  document.getElementById('wf-mat').value   = w.material || '';
+  document.getElementById('wf-mov').value   = w.movement || '';
+  document.getElementById('wf-res').value   = w.reserve || '';
+  document.getElementById('wf-wr').value    = w.wr || '';
+  document.getElementById('wf-strap').value = w.strap || '';
+  document.getElementById('wf-desc').value  = w.desc || '';
+  if (w.img) {
+    document.getElementById('wf-img-url').value  = w.img;
+    document.getElementById('wf-img-data').value = w.img;
+    _imgData = w.img;
+    const p = document.getElementById('img-preview');
+    p.src = w.img; p.style.display = 'block';
+  }
+  document.getElementById('watch-modal-title').textContent = 'Edit Watch — ' + w.name;
+  openModal('watch-modal');
+};
+
+window.deleteWatch = async id => {
+  if (!confirm('Remove this watch from the master collection?')) return;
+  await db.from('watches').delete().eq('id', id);
+  // Remove from all clients that had this watch assigned
+  const clients = await getClients();
+  for (const c of clients) {
+    if (c.watches && c.watches.includes(id)) {
+      await db.from('clients').update({ watches: c.watches.filter(w => w !== id) }).eq('id', c.id);
+    }
+  }
+  await renderWatches();
+};
+
+/* ------------------------------------------------------------------ */
+/* LOGS                                                                 */
+/* ------------------------------------------------------------------ */
+async function renderLogs() {
+  const tbody = document.getElementById('logs-tbody');
+  const logs  = await getLogs();
+  if (!logs.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:#333;">No login attempts recorded yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = logs.map(l => {
+    const d = new Date(l.timestamp || l.created_at);
+    const badge = l.success
+      ? '<span class="badge badge-g">Granted</span>'
+      : '<span class="badge badge-r">Denied</span>';
+    const fp = l.device ? l.device.substring(0,10)+'…' : '—';
+    return `<tr>
+      <td style="color:#444;font-size:.72rem;">${d.toLocaleString()}</td>
+      <td style="color:#f0ede8;">${l.clientName}</td>
+      <td style="font-family:monospace;font-size:.72rem;">${l.code}</td>
+      <td>${badge}</td>
+      <td style="color:#666;">${l.reason}</td>
+      <td style="font-family:monospace;font-size:.68rem;color:#333;" title="${l.device}">${fp}</td>
+    </tr>`;
+  }).join('');
+}
+
+document.getElementById('clear-logs-btn').addEventListener('click', async () => {
+  if (!confirm('Clear all activity logs?')) return;
+  await db.from('logs').delete().gte('created_at', '1970-01-01');
+  await renderLogs();
+});
+
+/* ------------------------------------------------------------------ */
+/* INIT                                                                 */
+/* ------------------------------------------------------------------ */
+async function refreshAll() {
+  await Promise.all([renderClients(), renderWatches(), renderLogs()]);
+}
+</script>
+</body>
+</html>

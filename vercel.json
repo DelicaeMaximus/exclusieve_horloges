@@ -1,0 +1,7 @@
+{
+  "version": 2,
+  "name": "max-collection",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" }
+  ]
+}

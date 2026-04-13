@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en" class="antialiased">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+  <title>MAX — Private Collection</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=GFS+Didot&display=swap"
+    rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cream:    '#f5f3ef',
+            surface:  '#eeebe6',
+            charcoal: '#091813',
+            forest:   '#0d3d2b',
+            forestlt: '#1a5c3e',
+            muted:    '#6b7a74',
+            border:   '#ddd9d2',
+            error:    '#b83232'
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          letterSpacing: {
+            widest:    '.18em',
+            superwide: '.28em'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    html { scroll-behavior: smooth; background: #f5f3ef; }
+
+    ::selection { background: rgba(13, 61, 43, 0.15); color: #091813; }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: #f5f3ef; }
+    ::-webkit-scrollbar-thumb { background: #c8c4bc; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #0d3d2b; }
+
+    body { background: #f5f3ef; color: #091813; overflow-x: hidden; }
+
+    .view {
+      display: none;
+      opacity: 0;
+      transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .view.active  { display: flex; }
+    .view.visible { opacity: 1; }
+
+    /* ---- LOGIN ---- */
+    #login-bg {
+      position: absolute; inset: 0;
+      background-image: url('https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?auto=format&fit=crop&q=80&w=2000');
+      background-size: cover; background-position: center;
+      opacity: 0.12;
+      filter: grayscale(60%) contrast(110%);
+      transform: scale(1.05);
+      animation: slowPan 30s linear infinite alternate;
+      z-index: 0;
+    }
+    @keyframes slowPan {
+      from { transform: scale(1.05) translateY(0); }
+      to   { transform: scale(1.1)  translateY(-2%); }
+    }
+    .login-overlay {
+      position: absolute; inset: 0;
+      background: radial-gradient(circle at center, rgba(245,243,239,0.2) 0%, #f5f3ef 80%);
+      z-index: 1;
+    }
+
+    .access-input {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid #c8c4bc;
+      border-radius: 0;
+      color: #091813;
+      text-align: center;
+      transition: all 0.4s ease;
+      font-size: 0.875rem;
+      letter-spacing: 0.06em;
+      width: 100%;
+    }
+    .access-input:focus {
+      outline: none;
+      border-bottom-color: #0d3d2b;
+      background: rgba(13,61,43,0.03);
+    }
+    .access-input::placeholder {
+      color: #a8a49e;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 0.65rem;
+      font-weight: 400;
+    }
+
+    /* OTP input styling */
+    .otp-input {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid #c8c4bc;
+      border-radius: 0;
+      color: #091813;
+      text-align: center;
+      transition: all 0.4s ease;
+      font-size: 1.25rem;
+      letter-spacing: 0.35em;
+      font-weight: 500;
+      width: 100%;
+    }
+    .otp-input:focus {
+      outline: none;
+      border-bottom-color: #0d3d2b;
+      background: rgba(13,61,43,0.03);
+    }
+    .otp-input::placeholder {
+      color: #d0ccc5;
+      letter-spacing: 0.3em;
+      font-size: 1rem;
+    }
+
+    /* ---- CARDS ---- */
+    .watch-card { cursor: pointer; position: relative; }
+
+    .watch-image-wrapper {
+      position: relative;
+      overflow: hidden;
+      aspect-ratio: 3/4;
+      background: #091813;
+    }
+    .watch-image {
+      width: 100%; height: 100%; object-fit: cover;
+      opacity: 0.85;
+      transition: transform 1.5s cubic-bezier(0.16,1,0.3,1), opacity 1s ease;
+      filter: contrast(1.05) brightness(0.95);
+    }
+    .watch-card:hover .watch-image {
+      transform: scale(1.07);
+      opacity: 1;
+    }
+
+    .card-overlay {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: clamp(.75rem, 3vw, 2rem) clamp(.6rem, 2.5vw, 1.5rem);
+      background: linear-gradient(to top, rgba(9,24,19,0.92) 0%, rgba(9,24,19,0) 100%);
+      transition: all 0.5s cubic-bezier(0.16,1,0.3,1);
+    }
+
+    @media (max-width: 480px) {
+      .card-overlay h3 { font-size: .85rem !important; line-height: 1.3; }
+      .card-overlay p  { font-size: .5rem !important; }
+    }
+
+    /* ---- HERO ---- */
+    @keyframes fadeInSoft {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .hero-welcome {
+      animation: fadeInSoft 1.4s ease forwards;
+      animation-delay: 0.2s;
+      opacity: 0;
+    }
+    .hero-brand {
+      animation: fadeInSoft 2.2s ease forwards;
+      animation-delay: 0.6s;
+      opacity: 0;
+    }
+    .hero-collection {
+      animation: fadeInSoft 1.6s ease forwards;
+      animation-delay: 1s;
+      opacity: 0;
+    }
+
+    /* ---- BUTTONS ---- */
+    .btn-primary {
+      background: #0d3d2b;
+      color: #f5f3ef;
+      transition: background 0.3s ease, transform 0.2s ease;
+      letter-spacing: 0.18em;
+    }
+    .btn-primary:hover {
+      background: #1a5c3e;
+      transform: translateY(-1px);
+    }
+
+    .btn-outline {
+      border: 1px solid #c8c4bc;
+      color: #091813;
+      background: transparent;
+      transition: all 0.3s ease;
+      letter-spacing: 0.18em;
+    }
+    .btn-outline:hover {
+      border-color: #0d3d2b;
+      color: #0d3d2b;
+    }
+
+    /* ---- STATUS BADGE ---- */
+    .badge-available {
+      background: rgba(13,61,43,0.1);
+      color: #0d3d2b;
+    }
+
+    /* ---- SPEC ROW ---- */
+    .spec-row {
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #e0dbd4;
+    }
+
+    /* ---- SPINNER ---- */
+    .spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(245,243,239,0.3);
+      border-top-color: #f5f3ef;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ---- VERIFICATION VIEW ---- */
+    .verification-dots {
+      display: flex; gap: 6px; justify-content: center; margin-bottom: 24px;
+    }
+    .verification-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #ddd9d2;
+      transition: background 0.3s ease;
+    }
+    .verification-dot.active { background: #0d3d2b; }
+
+    /* ---- MOBILE RESPONSIVE ---- */
+    @media (max-width: 640px) {
+      .login-card {
+        margin: 16px;
+        padding: 40px 24px 48px;
+        width: calc(100% - 32px);
+        max-width: 100%;
+      }
+      .hero-title {
+        font-size: 2.5rem !important;
+        line-height: 1.1;
+      }
+      .hero-subtitle {
+        font-size: 1.8rem !important;
+      }
+      .pdp-details {
+        padding: 40px 20px !important;
+      }
+    }
+
+    /* Prevent horizontal overflow */
+    * { box-sizing: border-box; }
+    .view { width: 100%; max-width: 100vw; }
+  </style>
+
+  <script src="https://openfpcdn.io/fingerprintjs/v4" async></script>
+</head>
+
+<body class="min-h-screen flex flex-col font-sans bg-cream text-charcoal">
+
+  <!-- ==================== LOGIN VIEW ==================== -->
+  <main id="login-view" class="view active flex-col items-center justify-center min-h-screen w-full relative">
+    <div id="login-bg"></div>
+    <div class="login-overlay"></div>
+
+    <div class="login-card relative z-10 flex flex-col items-center w-full max-w-sm px-10 py-14 bg-cream/80 backdrop-blur-sm border border-border mx-4 shadow-sm" style="box-sizing: border-box;">
+
+      <p class="text-[0.6rem] uppercase tracking-superwide text-muted mb-10">Private Collection</p>
+
+      <form id="login-form" class="w-full flex flex-col items-center">
+        <div class="w-full mb-5">
+          <input type="email" id="login-email" placeholder="Email Address"
+            class="access-input pb-3 pt-2" autocomplete="email" required>
+        </div>
+
+        <div class="w-full mb-7">
+          <input type="text" id="access-code" placeholder="Access Code"
+            class="access-input pb-3 pt-2 uppercase" autocomplete="off" required>
+        </div>
+
+        <p id="login-error"
+          class="text-error text-[10px] uppercase tracking-wider font-medium mb-6 opacity-0 transition-opacity duration-300 h-4 text-center w-full">
+          Access denied.
+        </p>
+
+        <button type="submit" id="login-btn" class="btn-primary w-full py-4 text-xs uppercase font-medium">
+          Enter Collection
+        </button>
+      </form>
+    </div>
+
+    <p class="relative z-10 mt-8 text-[0.6rem] uppercase tracking-widest text-muted">By invitation only</p>
+  </main>
+
+  <!-- ==================== VERIFICATION VIEW ==================== -->
+  <main id="verification-view" class="view flex-col items-center justify-center min-h-screen w-full relative">
+    <div id="login-bg-2" style="
+      position: absolute; inset: 0;
+      background-image: url('https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?auto=format&fit=crop&q=80&w=2000');
+      background-size: cover; background-position: center;
+      opacity: 0.08;
+      filter: grayscale(60%) contrast(110%);
+      z-index: 0;
+    "></div>
+    <div class="login-overlay"></div>
+
+    <div class="login-card relative z-10 flex flex-col items-center w-full max-w-sm px-10 py-14 bg-cream/80 backdrop-blur-sm border border-border mx-4 shadow-sm" style="box-sizing: border-box;">
+
+      <!-- Step indicator -->
+      <div class="verification-dots">
+        <div class="verification-dot active"></div>
+        <div class="verification-dot active"></div>
+      </div>
+
+      <p class="text-[0.6rem] uppercase tracking-superwide text-muted mb-3">Verification</p>
+      <p id="verify-hint" class="text-xs text-muted text-center mb-8 leading-relaxed" style="letter-spacing: 0.04em; max-width: 260px;">
+        A 6-digit verification code has been sent to your email address. Please check your inbox and spam folder.
+      </p>
+
+      <form id="verify-form" class="w-full flex flex-col items-center">
+        <div class="w-full mb-7">
+          <input type="text" id="verify-code" placeholder="000000"
+            class="otp-input pb-3 pt-2" inputmode="numeric" maxlength="6" autocomplete="one-time-code" required>
+        </div>
+
+        <p id="verify-error"
+          class="text-error text-[10px] uppercase tracking-wider font-medium mb-6 opacity-0 transition-opacity duration-300 h-4 text-center w-full">
+          Invalid code.
+        </p>
+
+        <button type="submit" id="verify-btn" class="btn-primary w-full py-4 text-xs uppercase font-medium mb-4">
+          Access Collection
+        </button>
+
+        <button type="button" id="resend-btn" class="btn-outline w-full py-3 text-xs uppercase font-medium">
+          Resend Code
+        </button>
+      </form>
+
+      <button id="back-to-login" class="mt-6 text-[0.6rem] uppercase tracking-widest text-muted hover:text-forest transition-colors">
+        ← Start over
+      </button>
+    </div>
+
+    <p class="relative z-10 mt-8 text-[0.6rem] uppercase tracking-widest text-muted">By invitation only</p>
+  </main>
+
+  <!-- ==================== COLLECTION VIEW ==================== -->
+  <main id="collection-view" class="view flex-col w-full min-h-screen bg-cream">
+
+    <!-- Hero -->
+    <section class="relative w-full overflow-hidden" style="height: clamp(260px, 40vw, 420px); background: linear-gradient(to bottom, #ede9e1 0%, #cec7bb 55%, #b0a897 100%);">
+
+      <!-- Gradient overlay: donker vignette voor meer diepte en sfeer -->
+      <div class="absolute inset-0" style="background: linear-gradient(to bottom, rgba(9,24,19,0.04) 0%, rgba(9,24,19,0.38) 100%); pointer-events:none;"></div>
+
+      <!-- Welcome bovenaan gecentreerd -->
+      <div class="absolute top-0 left-0 w-full text-center z-20" style="padding-top: clamp(1.5rem, 4vw, 2.5rem);">
+        <p id="welcome-name" class="hero-welcome" style="font-size:.68rem;font-weight:500;letter-spacing:.28em;text-transform:uppercase;color:rgba(9,24,19,0.5);font-family:'Inter',sans-serif;"></p>
+      </div>
+
+      <!-- DELICIAE MAXIMUS — Didot, groot, sterk aanwezig -->
+      <div class="absolute inset-0 flex items-center justify-center z-10">
+        <p class="hero-brand whitespace-nowrap" style="font-family:'GFS Didot',serif;font-size:clamp(2.2rem,7.5vw,5rem);font-weight:400;letter-spacing:0.22em;text-transform:uppercase;color:rgba(9,24,19,0.28);">Deliciae Maximus</p>
+      </div>
+
+      <!-- The Collection linksonder -->
+      <div class="absolute bottom-0 left-0 z-20" style="padding: 0 clamp(1.25rem,4vw,3rem) clamp(1.25rem,3vw,2rem);">
+        <p class="hero-collection" style="font-family:'Inter',sans-serif;font-size:clamp(1.4rem,4vw,2.2rem);font-weight:600;color:rgba(9,24,19,0.75);letter-spacing:-.01em;">The Collection</p>
+      </div>
+    </section>
+
+    <!-- Collection count bar -->
+    <div class="bg-cream">
+      <div class="max-w-[1400px] mx-auto px-5 md:px-12 py-4 flex items-center justify-between gap-4">
+        <p id="count-label" class="text-xs text-muted tracking-widest uppercase">Loading…</p>
+        <div class="flex items-center gap-5">
+          <p class="text-xs text-muted tracking-widest uppercase hidden sm:block">Exclusive Timepieces</p>
+          <button id="logout-collection-btn" class="btn-outline text-[0.65rem] uppercase tracking-widest px-4 py-2" style="border:1px solid #c8c4bc;background:transparent;color:#6b7a74;cursor:pointer;font-family:inherit;letter-spacing:.12em;transition:all .3s ease;">
+            Log Out
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grid -->
+    <section class="w-full max-w-[1400px] mx-auto px-5 md:px-12 py-10 pb-24">
+      <div id="watch-grid" class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 md:gap-8">
+        <!-- Watches injected here -->
+      </div>
+    </section>
+  </main>
+
+  <!-- ==================== PDP VIEW ==================== -->
+  <main id="pdp-view" class="view flex-col w-full min-h-screen bg-cream">
+
+    <!-- Nav -->
+    <nav class="w-full border-b border-border bg-cream sticky top-0 z-50">
+      <div class="max-w-[1400px] mx-auto px-5 md:px-12 h-14 md:h-16 flex items-center justify-between">
+        <button id="back-btn"
+          class="group flex items-center gap-3 text-charcoal hover:text-forest transition-colors duration-300">
+          <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+          </svg>
+          <span class="text-xs font-medium uppercase tracking-widest">Back to Collection</span>
+        </button>
+      </div>
+    </nav>
+
+    <div class="w-full flex flex-col lg:flex-row" style="min-height: calc(100vh - 56px);">
+
+      <!-- Image panel — dark -->
+      <div class="w-full lg:w-[55%] bg-charcoal flex items-center justify-center relative overflow-hidden" style="min-height: 55vw; max-height: 80vh;">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(26,92,62,0.08)_0%,transparent_70%)]"></div>
+        <img id="pdp-img" src="" alt="Watch"
+          class="w-full h-full object-contain relative z-10 drop-shadow-2xl p-8 md:p-16"
+          style="max-height: 80vh;">
+      </div>
+
+      <!-- Details panel -->
+      <div class="pdp-details w-full lg:w-[45%] flex flex-col justify-center px-6 py-12 md:px-14 lg:px-20 lg:py-0 bg-surface border-l border-border">
+        <div class="max-w-md w-full">
+
+          <!-- Available badge removed -->
+
+          <h2 id="pdp-title" class="text-xs uppercase tracking-widest text-muted font-medium mb-2"></h2>
+          <h1 id="pdp-name" class="font-semibold text-charcoal mb-6 leading-tight tracking-tight" style="font-size: clamp(1.6rem, 4vw, 2.25rem);"></h1>
+
+          <p id="pdp-desc" class="text-muted text-sm leading-relaxed mb-10"></p>
+
+          <div class="space-y-0 mb-10">
+            <div class="spec-row">
+              <span class="text-[0.65rem] uppercase tracking-widest text-muted">Reference</span>
+              <span id="pdp-ref" class="text-sm font-medium text-charcoal"></span>
+            </div>
+            <div class="spec-row mt-4">
+              <span class="text-[0.65rem] uppercase tracking-widest text-muted">Diameter</span>
+              <span id="pdp-diam" class="text-sm font-medium text-charcoal"></span>
+            </div>
+            <div class="spec-row mt-4">
+              <span class="text-[0.65rem] uppercase tracking-widest text-muted">Material</span>
+              <span id="pdp-mat" class="text-sm font-medium text-charcoal"></span>
+            </div>
+            <div class="spec-row mt-4">
+              <span class="text-[0.65rem] uppercase tracking-widest text-muted">Movement</span>
+              <span id="pdp-mov" class="text-sm font-medium text-charcoal"></span>
+            </div>
+            <div class="spec-row mt-4">
+              <span class="text-[0.65rem] uppercase tracking-widest text-muted">Power Reserve</span>
+              <span id="pdp-res" class="text-sm font-medium text-charcoal"></span>
+            </div>
+          </div>
+
+          <!-- Price container removed -->
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      setTimeout(() => document.body.classList.add('ready'), 300);
+
+      let visitorId = null;
+      try {
+        // Wait up to 3 seconds for FingerprintJS to load
+        await new Promise(resolve => {
+          if (window.FingerprintJS) return resolve();
+          const script = document.querySelector('script[src*="fingerprintjs"]');
+          if (script) script.addEventListener('load', resolve);
+          setTimeout(resolve, 3000);
+        });
+        if (window.FingerprintJS) {
+          const fpInstance = await window.FingerprintJS.load();
+          const result = await fpInstance.get();
+          visitorId = result.visitorId;
+        } else {
+          visitorId = 'fallback-fp';
+        }
+      } catch (e) { visitorId = 'fallback-fp'; }
+
+      let availableWatches = [];
+      let pendingEmail = '';
+
+      const loginView       = document.getElementById('login-view');
+      const verificationView = document.getElementById('verification-view');
+      const collectionView  = document.getElementById('collection-view');
+      const pdpView         = document.getElementById('pdp-view');
+      const loginForm       = document.getElementById('login-form');
+      const verifyForm      = document.getElementById('verify-form');
+      const emailInput      = document.getElementById('login-email');
+      const accessInput     = document.getElementById('access-code');
+      const loginError      = document.getElementById('login-error');
+      const verifyInput     = document.getElementById('verify-code');
+      const verifyError     = document.getElementById('verify-error');
+      const loginBtn        = document.getElementById('login-btn');
+      const verifyBtn       = document.getElementById('verify-btn');
+      const resendBtn       = document.getElementById('resend-btn');
+      const watchGrid       = document.getElementById('watch-grid');
+      const backBtn         = document.getElementById('back-btn');
+      const countLabel      = document.getElementById('count-label');
+
+      const switchView = (hideEl, showEl) => {
+        hideEl.classList.remove('visible');
+        setTimeout(() => {
+          hideEl.classList.remove('active');
+          window.scrollTo(0, 0);
+          showEl.classList.add('active');
+          requestAnimationFrame(() => requestAnimationFrame(() => showEl.classList.add('visible')));
+        }, 1200);
+      };
+
+      // ---- STEP 1: Email + Code → triggers email send ----
+      loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = emailInput.value.trim().toLowerCase();
+        const code  = accessInput.value.trim();
+
+        loginError.classList.remove('opacity-100');
+        loginError.classList.add('opacity-0');
+        if (!email || !code) return;
+
+        loginBtn.disabled = true;
+        loginBtn.innerHTML = '<span class="spinner"></span>Verifying…';
+
+        try {
+          const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, code, fingerprintId: visitorId })
+          });
+          const data = await response.json();
+
+          if (!response.ok) {
+            showLoginError(data.error || 'Access denied.');
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = 'Enter Collection';
+            return;
+          }
+
+          // Credentials valid — go to verification
+          pendingEmail = email;
+          document.getElementById('verify-hint').innerHTML =
+            `A 6-digit verification code has been sent to <strong style="color:#091813;">${email}</strong>. Please check your inbox and spam folder.`;
+
+          switchView(loginView, verificationView);
+          setTimeout(() => verifyInput.focus(), 1400);
+
+        } catch (err) {
+          showLoginError('Connection error. Please try again.');
+          loginBtn.disabled = false;
+          loginBtn.innerHTML = 'Enter Collection';
+        }
+      });
+
+      // ---- STEP 2: OTP verification ----
+      verifyForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const otp = verifyInput.value.trim();
+
+        verifyError.classList.remove('opacity-100');
+        verifyError.classList.add('opacity-0');
+        if (!otp || otp.length < 6) return;
+
+        verifyBtn.disabled = true;
+        verifyBtn.innerHTML = '<span class="spinner"></span>Verifying…';
+
+        try {
+          const response = await fetch('/api/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: pendingEmail, verificationCode: otp })
+          });
+          const data = await response.json();
+
+          if (!response.ok) {
+            showVerifyError(data.error || 'Invalid code.');
+            verifyBtn.disabled = false;
+            verifyBtn.innerHTML = 'Access Collection';
+            return;
+          }
+
+          const welcomeEl = document.getElementById('welcome-name');
+          if (welcomeEl) welcomeEl.textContent = `Welcome, ${data.clientName}`;
+          loadCollection(data.watches);
+          switchView(verificationView, collectionView);
+
+        } catch (err) {
+          showVerifyError('Connection error. Please try again.');
+          verifyBtn.disabled = false;
+          verifyBtn.innerHTML = 'Access Collection';
+        }
+      });
+
+      // ---- Resend Code ----
+      resendBtn.addEventListener('click', async () => {
+        if (!pendingEmail) return;
+        resendBtn.disabled = true;
+        resendBtn.textContent = 'Sending…';
+
+        try {
+          await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: pendingEmail,
+              code: accessInput.value.trim(),
+              fingerprintId: visitorId
+            })
+          });
+        } catch (e) {}
+
+        resendBtn.textContent = 'Code Resent';
+        setTimeout(() => {
+          resendBtn.disabled = false;
+          resendBtn.textContent = 'Resend Code';
+        }, 15000);
+      });
+
+      // ---- Log Out from collection ----
+      document.getElementById('logout-collection-btn').addEventListener('click', () => {
+        availableWatches = [];
+        pendingEmail = '';
+        verifyInput.value = '';
+        accessInput.value = '';
+        emailInput.value = '';
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = 'Enter Collection';
+        collectionView.classList.remove('visible');
+        setTimeout(() => {
+          collectionView.classList.remove('active');
+          window.scrollTo(0, 0);
+          loginView.classList.add('active');
+          requestAnimationFrame(() => requestAnimationFrame(() => loginView.classList.add('visible')));
+        }, 600);
+      });
+
+      // ---- Back to login ----
+      document.getElementById('back-to-login').addEventListener('click', () => {
+        pendingEmail = '';
+        verifyInput.value = '';
+        verifyError.classList.add('opacity-0');
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = 'Enter Collection';
+        switchView(verificationView, loginView);
+      });
+
+      const showLoginError = (msg) => {
+        loginError.textContent = msg;
+        loginError.classList.remove('opacity-0');
+        loginError.classList.add('opacity-100');
+        [accessInput, emailInput].forEach(el => {
+          el.style.borderBottomColor = '#b83232';
+          setTimeout(() => el.style.borderBottomColor = '', 2000);
+        });
+      };
+
+      const showVerifyError = (msg) => {
+        verifyError.textContent = msg;
+        verifyError.classList.remove('opacity-0');
+        verifyError.classList.add('opacity-100');
+        verifyInput.style.borderBottomColor = '#b83232';
+        setTimeout(() => verifyInput.style.borderBottomColor = '', 2000);
+      };
+
+      const loadCollection = (watches) => {
+        availableWatches = watches;
+        watchGrid.innerHTML = '';
+
+        if (countLabel) countLabel.textContent = `${watches.length} timepiece${watches.length !== 1 ? 's' : ''} selected for you`;
+
+        if (watches.length === 0) {
+          watchGrid.innerHTML = '<p class="text-muted text-xs uppercase tracking-widest col-span-full text-center py-24">Your collection is currently empty.</p>';
+          return;
+        }
+
+        watches.forEach((watch, index) => {
+          const card = document.createElement('div');
+          card.className = 'watch-card group bg-charcoal overflow-hidden';
+          card.style.cssText = `opacity:0; transform:translateY(24px); transition:all 1s cubic-bezier(0.16,1,0.3,1) ${0.6 + index * 0.12}s`;
+
+          card.innerHTML = `
+            <div class="watch-image-wrapper">
+              <img src="${watch.img}" alt="${watch.name}" class="watch-image" loading="lazy">
+              <div class="card-overlay">
+                <p class="text-[0.55rem] uppercase tracking-widest text-white/50 mb-1">${watch.ref}</p>
+                <h3 class="text-lg font-semibold text-white leading-snug">${watch.name}</h3>
+              </div>
+            </div>
+            <div class="px-5 py-4 bg-charcoal">
+              <!-- Grid card labels removed -->
+            </div>
+          `;
+
+          card.addEventListener('click', () => openPDP(watch));
+          watchGrid.appendChild(card);
+        });
+
+        setTimeout(() => {
+          document.querySelectorAll('.watch-card').forEach(c => {
+            c.style.opacity = '1';
+            c.style.transform = 'translateY(0)';
+          });
+        }, 100);
+      };
+
+      const openPDP = (watch) => {
+        document.getElementById('pdp-img').src    = watch.img;
+        document.getElementById('pdp-title').textContent = watch.title || 'Timepiece';
+        document.getElementById('pdp-name').textContent  = watch.name;
+        document.getElementById('pdp-desc').textContent  = watch.desc;
+        document.getElementById('pdp-ref').textContent   = watch.ref;
+        document.getElementById('pdp-diam').textContent  = watch.diam;
+        document.getElementById('pdp-mat').textContent   = watch.material;
+        document.getElementById('pdp-mov').textContent   = watch.movement;
+        document.getElementById('pdp-res').textContent   = watch.reserve;
+
+        switchView(collectionView, pdpView);
+
+        const pdpImg = document.getElementById('pdp-img');
+        pdpImg.style.opacity = '0';
+        pdpImg.style.transform = 'scale(0.97)';
+        setTimeout(() => {
+          pdpImg.style.transition = 'all 1.4s cubic-bezier(0.16,1,0.3,1)';
+          pdpImg.style.opacity = '1';
+          pdpImg.style.transform = 'scale(1)';
+        }, 1200);
+      };
+
+      backBtn.addEventListener('click', () => switchView(pdpView, collectionView));
+
+      setTimeout(() => {
+        loginView.classList.add('visible');
+        emailInput.focus();
+      }, 400);
+    });
+  </script>
+</body>
+
+</html>
